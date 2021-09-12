@@ -18,3 +18,13 @@ resource "aws_subnet" "dev-subnet-1" {
         Name: "subnet-1-dev"
     }
 }
+
+data "aws_vpcs" "existing-vpc" {
+    tags = {
+        Name = "development"
+    }
+}
+
+output "dev_vpc" {
+  value       = data.aws_vpcs.existing-vpc.ids
+}
