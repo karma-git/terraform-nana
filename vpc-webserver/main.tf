@@ -10,7 +10,7 @@ variable env_prefix {}
 // export TF_VAR_my_ip=$(curl --silent ifconfig.me.)
 variable my_ip {}
 variable instance_type {}
-variable ssh-key-name {}
+variable public_key {}
 
 resource "aws_vpc" "this" {
     cidr_block = var.vpc_cidr_block
@@ -136,6 +136,12 @@ output "ami_id" {
     value = data.aws_ami.this.id
 }
 
+resource "aws_key_pair" "this" {
+    key_name = "webserver-key"
+    public_key = var.public_key
+    // public_key = "{file(...)}"
+}
+
 resource "aws_instance" "this" {
     ami = data.aws_ami.this.id
     instance_type = var.instance_type
@@ -145,7 +151,7 @@ resource "aws_instance" "this" {
     availability_zone = var.av_zone
 
     associate_public_ip_address = true
-    key_name = var.ssh-key-name
+    key_name = aws_key_pair.this.key_name
     
     tags = {
         Name = "${var.env_prefix}-webserver"
