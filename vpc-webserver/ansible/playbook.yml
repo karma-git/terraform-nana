@@ -1,0 +1,50 @@
+---
+
+- name: install docker engine ubuntu
+  hosts: all
+
+  become: true
+  become_method: sudo
+
+  tasks:
+    - name: 1. Update the apt package index and install packages to allow apt to use a repository over HTTPS
+      apt:
+        name: 
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+          - python3-pip
+          - awscli
+        state: latest
+        update_cache: true
+
+    - name: 2. Add Docker’s official GPG key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: 3. Add Docker Repository
+      apt_repository:
+        repo: deb https://download.docker.com/linux/ubuntu focal stable  # FIXME move to var
+        state: present
+
+    - name: 4. Install docker engine
+      apt:
+        name: docker-ce
+        state: latest
+        update_cache: true
+
+    # Docker post-install steps for ubuntu
+
+    - name: 1. Make sure that group "docker" exists
+      group:
+        name: docker
+        state: present
+
+    - name: 2. Add aws user to docker docker group
+      user:
+        name: ubuntu
+        groups: docker
+        append: true

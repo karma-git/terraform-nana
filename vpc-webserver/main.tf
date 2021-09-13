@@ -10,7 +10,9 @@ variable env_prefix {}
 // export TF_VAR_my_ip=$(curl --silent ifconfig.me.)
 variable my_ip {}
 variable instance_type {}
-variable public_key {}
+variable public_key_path {}
+variable private_key_path {}
+variable ssh_user {}
 
 resource "aws_vpc" "this" {
     cidr_block = var.vpc_cidr_block
@@ -117,6 +119,9 @@ resource "aws_security_group" "this" {
 }
 // !NOTE we can use default sg created with vpc via resource <aws_default_security_group>
 
+/*
+aws amazon linux ami
+
 data "aws_ami" "this" {
     most_recent = true
     owners = ["amazon"]
@@ -131,14 +136,34 @@ data "aws_ami" "this" {
         values = ["hvm"]
     }
 }
+*/
+
+data "aws_ami" "this" {
+    most_recent = true
+    owners = ["099720109477"]
+
+    filter {
+        name = "description"
+        values = ["Canonical, Ubuntu, 20.04 LTS, amd64 focal image build on*"]
+    }
+
+    filter {
+        name = "virtualization-type"
+        values = ["hvm"]
+    }
+}
 
 output "ami_id" {
     value = data.aws_ami.this.id
 }
 
+output "ec2_instance_public_ip" {
+    value = aws_instance.this.public_ip
+}
+
 resource "aws_key_pair" "this" {
     key_name = "webserver-key"
-    public_key = var.public_key
+    public_key = file(var.public_key_path)
     // public_key = file(...) ~/.ssh/id_rsa
 }
 
@@ -153,7 +178,28 @@ resource "aws_instance" "this" {
     associate_public_ip_address = true
     key_name = aws_key_pair.this.key_name
 
-    user_data = file("install_docker_engine.sh")
+    // user_data = file("install_docker_engine.sh")
+
+    provisioner "remote-exec" {
+        script = "scripts/wait_for_instance.sh"
+
+        connection {
+            type = "ssh"
+            host = self.public_ip
+            user = var.ssh_user
+            private_key = file(var.private_key_path)
+        }
+    }
+
+    provisioner "local-exec" {
+        command = <<EOF
+        ansible-playbook \
+          --inventory '${self.public_ip},' \
+          --private-key ${var.private_key_path} \
+          --user ${var.ssh_user} \
+          ansible/playbook.yml
+        EOF
+    }
     
     tags = {
         Name = "${var.env_prefix}-webserver"
