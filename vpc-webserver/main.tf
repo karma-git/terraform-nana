@@ -10,7 +10,8 @@ variable env_prefix {}
 // export TF_VAR_my_ip=$(curl --silent ifconfig.me.)
 variable my_ip {}
 variable instance_type {}
-variable public_key {}
+variable public_key_path {}
+variable private_key_path {}
 
 resource "aws_vpc" "this" {
     cidr_block = var.vpc_cidr_block
@@ -136,9 +137,13 @@ output "ami_id" {
     value = data.aws_ami.this.id
 }
 
+output "ec2_instance_public_ip" {
+    value = aws_instance.this.public_ip
+}
+
 resource "aws_key_pair" "this" {
     key_name = "webserver-key"
-    public_key = var.public_key
+    public_key = file(var.public_key_path)
     // public_key = file(...) ~/.ssh/id_rsa
 }
 
@@ -153,7 +158,23 @@ resource "aws_instance" "this" {
     associate_public_ip_address = true
     key_name = aws_key_pair.this.key_name
 
-    user_data = file("install_docker_engine.sh")
+    // user_data = file("install_docker_engine.sh")
+
+   connection {
+       type = "ssh"
+       host = self.public_ip
+       user = "ec2-user"
+       private_key = file(var.private_key_path)
+   }
+
+   provisioner "file" {
+       source = "install_docker_engine.sh"
+       destination = "/home/ec2-user/install.sh"
+   }
+
+    provisioner "remote-exec" {
+        script = file("install.sh")
+    }
     
     tags = {
         Name = "${var.env_prefix}-webserver"
