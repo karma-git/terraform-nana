@@ -139,7 +139,7 @@ output "ami_id" {
 resource "aws_key_pair" "this" {
     key_name = "webserver-key"
     public_key = var.public_key
-    // public_key = "{file(...)}"
+    // public_key = file(...) ~/.ssh/id_rsa
 }
 
 resource "aws_instance" "this" {
@@ -152,6 +152,8 @@ resource "aws_instance" "this" {
 
     associate_public_ip_address = true
     key_name = aws_key_pair.this.key_name
+
+    user_data = file("install_docker_engine.sh")
     
     tags = {
         Name = "${var.env_prefix}-webserver"
