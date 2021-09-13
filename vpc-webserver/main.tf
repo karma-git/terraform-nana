@@ -4,7 +4,7 @@ provider "aws" {
 }
 
 variable vpc_cidr_block {}
-variable sunbet_cidr_blok {}
+variable sunbet_cidr_block {}
 variable av_zone {}
 variable env_prefix {}
 // export TF_VAR_my_ip=$(curl --silent ifconfig.me.)
