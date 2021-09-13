@@ -75,6 +75,7 @@ resource "aws_route_table_association" "this" {
   subnet_id = aws_subnet.this.id
 }
 
+
 resource "aws_security_group" "this" {
     name = "webserver-sg"
     vpc_id = aws_vpc.this.id
@@ -111,4 +112,24 @@ resource "aws_security_group" "this" {
     tags = {
         Name = "${var.env_prefix}-sg"
     }
+}
+// !NOTE we can use default sg created with vpc via resource <aws_default_security_group>
+
+data "aws_ami" "this" {
+    most_recent = true
+    owners = ["amazon"]
+
+    filter {
+        name = "name"
+        values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+    }
+
+    filter {
+        name = "virtualization-type"
+        values = ["hvm"]
+    }
+}
+
+output "ami_id" {
+    value = data.aws_ami.this.id
 }
