@@ -12,6 +12,7 @@ variable my_ip {}
 variable instance_type {}
 variable public_key_path {}
 variable private_key_path {}
+variable ssh_user {}
 
 resource "aws_vpc" "this" {
     cidr_block = var.vpc_cidr_block
@@ -118,6 +119,9 @@ resource "aws_security_group" "this" {
 }
 // !NOTE we can use default sg created with vpc via resource <aws_default_security_group>
 
+/*
+aws amazon linux ami
+
 data "aws_ami" "this" {
     most_recent = true
     owners = ["amazon"]
@@ -125,6 +129,22 @@ data "aws_ami" "this" {
     filter {
         name = "name"
         values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+    }
+
+    filter {
+        name = "virtualization-type"
+        values = ["hvm"]
+    }
+}
+*/
+
+data "aws_ami" "this" {
+    most_recent = true
+    owners = ["099720109477"]
+
+    filter {
+        name = "description"
+        values = ["Canonical, Ubuntu, 20.04 LTS, amd64 focal image build on*"]
     }
 
     filter {
@@ -160,20 +180,25 @@ resource "aws_instance" "this" {
 
     // user_data = file("install_docker_engine.sh")
 
-   connection {
-       type = "ssh"
-       host = self.public_ip
-       user = "ec2-user"
-       private_key = file(var.private_key_path)
-   }
-
-   provisioner "file" {
-       source = "install_docker_engine.sh"
-       destination = "/home/ec2-user/install.sh"
-   }
-
     provisioner "remote-exec" {
-        script = file("install.sh")
+        script = "scripts/wait_for_instance.sh"
+
+        connection {
+            type = "ssh"
+            host = self.public_ip
+            user = var.ssh_user
+            private_key = file(var.private_key_path)
+        }
+    }
+
+    provisioner "local-exec" {
+        command = <<EOF
+        ansible-playbook \
+          --inventory '${self.public_ip},' \
+          --private-key ${var.private_key_path} \
+          --user ${var.ssh_user} \
+          ansible/playbook.yml
+        EOF
     }
     
     tags = {
