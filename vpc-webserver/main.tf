@@ -35,17 +35,17 @@ resource "aws_internet_gateway" "app" {
 resource "aws_route_table" "app" {
     vpc_id = aws_vpc.app.id
 
-    routes {
+    route {
         cidr_block = "0.0.0.0/0"
         gateway_id = aws_internet_gateway.app.id
     }
 
-    tags {
+    tags = {
         Name = "${var.env_prefix}-route-table"
     }
 }
 
 resource "aws_route_table_association" "app" {
-    route_table_id = aws_default_route_table.app.id
+    route_table_id = aws_route_table.app.id
     subnet_id = aws_subnet.app.id
 }
