@@ -4,7 +4,7 @@ provider "aws" {
 }
 
 variable vpc_cidr_block {}
-variable sunbet_cidr_blok {}
+variable sunbet_cidr_block {}
 variable av_zone {}
 variable env_prefix {}
 // export TF_VAR_my_ip=$(curl --silent ifconfig.me.)
@@ -178,10 +178,10 @@ resource "aws_instance" "this" {
     associate_public_ip_address = true
     key_name = aws_key_pair.this.key_name
 
-    // user_data = file("install_docker_engine.sh")
+    // user_data = file("../scripts/install_docker_engine.sh")
 
     provisioner "remote-exec" {
-        script = "scripts/wait_for_instance.sh"
+        script = "../scripts/wait_for_instance.sh"
 
         connection {
             type = "ssh"
@@ -197,8 +197,9 @@ resource "aws_instance" "this" {
           --inventory '${self.public_ip},' \
           --private-key ${var.private_key_path} \
           --user ${var.ssh_user} \
-          ansible/playbook.yml
+          ../ansible/playbook.yml
         EOF
+
     }
     
     tags = {
