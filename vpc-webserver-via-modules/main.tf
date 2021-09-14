@@ -6,7 +6,7 @@ resource "aws_vpc" "this" {
 }
 
 module "my-vpc" {
-    source = "./vpc"
+    source = "../_modules/vpc"
 
     sunbet_cidr_block = var.sunbet_cidr_block
     av_zone = var.av_zone
@@ -16,7 +16,7 @@ module "my-vpc" {
 }
 
 module "my-webserver" {
-    source = "./webserver"
+    source = "../_modules/webserver"
 
     vpc_id = aws_vpc.this.id
     subnet_id = module.my-vpc.subnet.id
