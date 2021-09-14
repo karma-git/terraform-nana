@@ -25,4 +25,6 @@ module "my-webserver" {
     public_key_path = var.public_key_path
     instance_type = var.instance_type
     av_zone = var.av_zone
+    ssh_user = var.ssh_user
+    private_key_path = var.private_key_path
 }

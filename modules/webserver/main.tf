@@ -59,6 +59,27 @@ resource "aws_instance" "this" {
 
     associate_public_ip_address = true
     key_name = aws_key_pair.this.key_name
+
+    provisioner "remote-exec" {
+        script = "../scripts/wait_for_instance.sh"
+
+        connection {
+            type = "ssh"
+            host = self.public_ip
+            user = var.ssh_user
+            private_key = file(var.private_key_path)
+        }
+    }
+
+    provisioner "local-exec" {
+        command = <<EOF
+        ansible-playbook \
+          --inventory '${self.public_ip},' \
+          --private-key ${var.private_key_path} \
+          --user ${var.ssh_user} \
+          ../ansible/playbook.yml
+        EOF
+    }
     
     tags = {
         Name = "${var.env_prefix}-webserver"
