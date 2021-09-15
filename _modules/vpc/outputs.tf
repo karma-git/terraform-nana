@@ -1,3 +1,3 @@
 output "subnet" {
-    value = aws_subnet.this
+  value = aws_subnet.this
 }

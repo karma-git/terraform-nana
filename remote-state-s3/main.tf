@@ -11,17 +11,17 @@ terraform {
   required_version = ">= 0.12"
   backend "s3" {
     bucket = "nana-terraform"
-    key = "nana-terraform/state.tfstate"
+    key    = "nana-terraform/state.tfstate"
     region = "us-east-2"
   }
 }
 
 provider "aws" {
-    region = "us-east-2"
-    profile = "karma-it-aws"
+  region  = "us-east-2"
+  profile = "karma-it-aws"
 }
 
 resource "aws_instance" "this" {
-  ami = "ami-00dfe2c7ce89a450b"
+  ami           = "ami-00dfe2c7ce89a450b"
   instance_type = "t2.micro"
 }
